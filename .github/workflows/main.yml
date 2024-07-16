@@ -1,0 +1,59 @@
+# This workflow will build a .NET project
+# USING THE MSBUILD PROCESS...
+
+# Must use MSBUILD because we added the security library which needs 
+# Interop.ASPENCRYPTLib typo library (COM)
+# COM builds are not supported by dotnet builds... sadly...
+
+#name: Reusable Source Build
+run-name: Build ${{ github.event_name }} by @${{ github.actor }}
+
+on:
+  release:
+    types: [published]
+    # Sequence of patterns matched against refs/tags
+    #tags:
+    #  - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  workflow_dispatch:  
+    inputs:
+      pick_deployment:
+        description: Environment to create the release for
+        required: true
+        type: choice
+        options:
+          - Staging
+          - Release
+        default: Release
+
+env:
+  SOLUTION_FILE_PATH: ./src/Brisk.Alternative.Risk.sln
+  PROJECT_FILE_PATH: ./src/BarApi.Client.WebSite/BarApi.Client.WebSite.csproj
+  BUILD_CONFIGURATION: Release
+  RUN_TESTS: false
+  VERSION_PREFIX: ${{ vars.VERSION_NUMBER_PREFIX }}
+
+permissions:
+  contents: read
+
+
+jobs:
+  job1:
+    runs-on: [windows-latest]
+    outputs:
+      myoutput: ${{ steps.step1.outputs.myoutput }}
+    
+    steps:
+    - name: set output
+      id: step1
+      run: |
+        echo "myoutput='hello world'" >> $GITHUB_OUTPUT
+
+  job2:
+    runs-on: [windows-latest]
+    needs: job1
+
+    steps:
+    - name: retrieve output
+      run: |
+        echo ${{ needs.job1.outputs.myoutput }}
+        
